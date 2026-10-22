@@ -3,7 +3,7 @@
   "manifest_version": "0.3",
   "name": "open-rhino-mcp",
   "display_name": "Open Rhino MCP",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Drive Rhino 7 from Claude: query and tag objects, model, annotate, lay out sheets, export PDFs, run commands and IronPython.",
   "long_description": "Open Rhino MCP connects Claude to a running Rhino 7 through the Open Rhino MCP plug-in (install the .rhp in Rhino first). It exposes typed tools for objects, user text, layers, geometry, blocks, annotations, layouts and PDF export, plus scripted Rhino commands, IronPython, live API help and official command docs.",
   "author": { "name": "Studio Archonomous", "url": "https://github.com/Archonomous" },

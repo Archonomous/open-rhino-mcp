@@ -43,10 +43,10 @@ after(async () => {
   await mock?.close();
 });
 
-test("lists all 38 tools with annotations", async () => {
+test("lists all 39 tools with annotations", async () => {
   const { tools } = await client.listTools();
   const names = tools.map((t) => t.name).sort();
-  assert.equal(ALL_TOOL_NAMES.length, 38);
+  assert.equal(ALL_TOOL_NAMES.length, 39);
   assert.deepEqual(names, [...ALL_TOOL_NAMES].sort());
   for (const t of tools) {
     assert.ok(t.description && t.description.length > 30, `${t.name} needs a description`);

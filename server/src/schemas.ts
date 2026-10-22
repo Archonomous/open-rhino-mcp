@@ -190,7 +190,13 @@ export const AnnotationItem = z.discriminatedUnion("type", [
     type: z.literal("text"),
     text: z.string(),
     point: Point,
-    height: z.number().positive().optional().describe("Text height in the space it's drawn in (model or page units)"),
+    height: z
+      .number()
+      .positive()
+      .optional()
+      .describe(
+        "Text height. In page space (attributes.layout) it's paper size. In model space with annotation scaling on, Rhino multiplies it by the dimstyle's model-space scale, and details show it at paper size; see rhino_guide drafting",
+      ),
     plane: Plane.optional(),
     dimstyle: z.string().optional(),
     justification: Justification.optional(),
@@ -222,6 +228,17 @@ export const AnnotationItem = z.discriminatedUnion("type", [
     text: z.string(),
     point: Point,
     height: z.number().int().positive().optional().describe("Font height in screen pixels (default 14)"),
+    ...withAttrs,
+  }),
+  z.object({
+    type: z.literal("hatch"),
+    boundary_ids: z.array(Id).min(1).describe("Closed planar curves; nested curves make holes"),
+    pattern: z
+      .string()
+      .optional()
+      .describe("Pattern name (default Solid). Standard patterns are added if missing: Solid, Hatch1, Hatch2, Hatch3, HatchDash, Grid, Grid60, Plus, Squares"),
+    scale: z.number().positive().optional().describe("Pattern scale (default 1)"),
+    rotation_deg: z.number().optional(),
     ...withAttrs,
   }),
 ]);

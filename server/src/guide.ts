@@ -146,15 +146,25 @@ units holding detail views that look into model space at a set scale.
 - Annotation that belongs to the sheet (title block, notes, keynotes) goes on the
   layout. Annotation tied to geometry (tags, dimensions, leaders) usually lives in
   model space on annotation layers.
-- Dimension styles (dimstyles) control text height, arrows, units and scale. Rhino 7
-  supports "model space scaling" so text drawn in model space reads the right size in
-  a detail; keep one dimstyle per drawing scale or use annotation scaling consistently.
-  rhino_document_info lists dimstyles and the current one.
+- Dimension styles (dimstyles) control text height, arrows, units and scale. With
+  annotation scaling on (the Rhino 7 default for most templates), a model-space text
+  height is a PAPER height: a 3 mm note shows as 3 mm on every sheet, whatever the
+  detail scale, and Rhino enlarges it in model views by the dimstyle's model-space
+  scale. Typing a real-world size (e.g. 250 mm room label) makes it 250 mm on paper:
+  enormous in a 1:50 detail. Use paper heights (2.5–3.5 mm / 3/32–1/8 in) for tags,
+  room names and dimensions, check the dimstyle in rhino_document_info, and capture
+  the layout to confirm. Keep one dimstyle per drawing scale if scaling is off.
+- Put sheet annotation (title block, notes, keynotes) on the layout with
+  attributes.layout: "<layout name>"; coordinates are then page units.
+- Commands act in the active view. rhino_create_layout makes the new layout active;
+  activate a model view (rhino_set_view) before running model commands.
 - Text height on layouts is in page units (0.09–0.125 in is typical for notes).
 - Print widths come from layers (or objects); check them with "_Print" preview or a PDF.
   Hidden lines and hatches print at their own widths.
-- Hatches: "-_Hatch" with _Pattern, _Scale, _Rotation on closed planar curves. Hatch
-  scale is in model units unless the pattern is set to scale with the page.
+- Hatches: use rhino_create_annotations type "hatch" with boundary_ids and a pattern.
+  New files often have no hatch patterns loaded; the tool adds the standard ones
+  (Solid, Hatch1–3, HatchDash, Grid, Grid60, Plus, Squares) when first used. Pattern
+  scale is in model units: start near 1/50 of the region size and check a capture.
 - Export with rhino_export_pdf: all layouts in page order by default; choose color
   "print" to honor print colors, or "black_white" for permit sets.
 - After any layout change, capture the layout with rhino_capture_view and inspect it.

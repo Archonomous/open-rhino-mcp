@@ -106,10 +106,23 @@ namespace OpenRhinoMcp.Bridge
                     while (_running && (line = reader.ReadLine()) != null)
                     {
                         if (line.Trim().Length == 0) continue;
-                        bool close;
-                        var response = Handle(line, out close);
-                        writer.WriteLine(response.ToString(Formatting.None));
-                        if (close) break;
+                        // Handle each request on its own worker so a long or stuck command doesn't
+                        // block others on this connection (rhino_cancel, status). UI-thread work is
+                        // still serialized by Rhino; responses may arrive out of order (match by id).
+                        var request = line;
+                        ThreadPool.QueueUserWorkItem(_ =>
+                        {
+                            bool close;
+                            var response = Handle(request, out close);
+                            try
+                            {
+                                lock (writer) writer.WriteLine(response.ToString(Formatting.None));
+                                if (close) client.Close();
+                            }
+                            catch (IOException) { }
+                            catch (ObjectDisposedException) { }
+                            catch (InvalidOperationException) { }
+                        });
                     }
                 }
             }

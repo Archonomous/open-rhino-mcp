@@ -98,15 +98,31 @@ export const TOOL_SPECS: ToolSpec[] = [
     title: "Run a Rhino command macro",
     method: "commands.run",
     description:
-      'Run any Rhino command as a scripted macro (RhinoApp.RunScript), e.g. "-_Hatch _Pattern=Grid _Enter" or "-_SaveAs \\"C:\\\\path\\\\file.3dm\\" _Enter". Use English names with "_" and dash forms ("-_") to avoid dialogs; finish prompts with _Enter; never use _Pause. Pass select_ids to select exactly those objects first, for commands that act on the selection. Returns success, the command-line history printed during the run (read it: Rhino reports failures there), and created/deleted/modified ids. Fails if another command is already running. See rhino_guide topic "scripting_commands".',
+      'Run any Rhino command as a scripted macro (RhinoApp.RunScript), e.g. "-_Hatch _Pattern=Grid _Enter" or "-_SaveAs \\"C:\\\\path\\\\file.3dm\\" _Enter". Use English names with "_" and dash forms ("-_") to avoid dialogs; finish prompts with _Enter; never use _Pause. Pass select_ids to select exactly those objects first, for commands that act on the selection. Commands act in the active view: activate a model view first if a layout is active. A command still running after max_wait_ms (default 30 s), usually because it is waiting at a prompt the macro did not answer, is cancelled automatically and reported with cancelled: true. Returns success, the command-line history printed during the run (read it: Rhino reports failures and pending prompts there), and created/deleted/modified ids. Fails if another command is already running. See rhino_guide topic "scripting_commands".',
     shape: {
       macro: z.string().min(1).describe("Command macro"),
       select_ids: Ids.optional().describe("Replace the selection with these objects before running"),
       echo: z.boolean().optional().describe("Echo the macro to the command line (default false)"),
       capture_history: z.boolean().optional().describe("Return command-line text produced during the run (default true)"),
+      max_wait_ms: z
+        .number()
+        .int()
+        .min(1000)
+        .max(600000)
+        .optional()
+        .describe("Cancel the command if still running after this long (default 30000). Raise it for long operations and raise timeout_ms above it."),
       timeout_ms: TimeoutMs,
     },
     annotations: ANYTHING,
+  },
+  {
+    name: "rhino_cancel",
+    title: "Cancel the running Rhino command",
+    method: "commands.cancel",
+    description:
+      "Cancel whatever command is running in Rhino, like pressing Esc: use it when rhino_status shows command_running true and calls fail with \"Rhino is busy\". Works while the command is still running. Returns whether a command was running.",
+    shape: {},
+    annotations: EDIT_IDEMPOTENT,
   },
   {
     name: "rhino_command_history",
@@ -489,7 +505,7 @@ export const TOOL_SPECS: ToolSpec[] = [
     title: "Create text, leaders, dimensions, dots",
     method: "annotations.create",
     description:
-      'Create annotations in bulk: text {text, point, height, plane, dimstyle, justification, font, rotation_deg, wrap_width}, leader {text, points (arrow tip first)}, dimension {kind aligned|horizontal|vertical, start, end, line_point}, dot {text, point}. To put text on a layout sheet, activate the layout first with rhino_set_view {action: "activate", view: "<layout name>"} — coordinates are then page units. Returns ids and errors.',
+      'Create annotations in bulk: text {text, point, height, plane, dimstyle, justification, font, rotation_deg, wrap_width}, leader {text, points (arrow tip first)}, dimension {kind aligned|horizontal|vertical, start, end, line_point}, dot {text, point}, hatch {boundary_ids, pattern, scale, rotation_deg} (standard patterns are added automatically). To put an item on a layout sheet, set attributes.layout to the layout name; coordinates are then page units. Returns ids and errors.',
     shape: { items: z.array(AnnotationItem).min(1).max(500) },
     annotations: ADD,
   },

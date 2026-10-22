@@ -6,7 +6,7 @@ import { RhinoBridge } from "./bridge.js";
 import { GUIDE, GUIDE_TOPICS, renderGuide } from "./guide.js";
 import { registerTools } from "./tools.js";
 
-export const VERSION = "0.1.0";
+export const VERSION = "0.1.1";
 
 export const INSTRUCTIONS = `Open Rhino MCP drives a running Rhino 7 (Windows/macOS) through its plug-in.
 - Start with rhino_status: model units and tolerance decide how to read every coordinate.

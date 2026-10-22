@@ -14,7 +14,9 @@ Agent (Claude, Cursor, Codex…) ⇄ MCP (stdio) ⇄ Node server ⇄ TCP 127.0.0
   OS-assigned port.
 - Framing: **newline-delimited JSON** (one UTF-8 JSON object per line, `\n` terminated). No
   embedded raw newlines (JSON string escapes are fine).
-- One connection may carry many requests. Requests on one connection are executed in order.
+- One connection may carry many requests. The plug-in handles them concurrently and responses may
+  arrive out of order: match them by `id`. Work on Rhino's UI thread is still serialized, and
+  mutating methods fail with `rhino_busy` while a Rhino command is active.
 - All handler work runs on Rhino's UI thread. Default per-request timeout: 120 s
   (`params.timeout_ms` may override, max 600 000).
 
@@ -103,7 +105,8 @@ views once at the end.
 | method | params | result |
 |---|---|---|
 | `commands.list` | `{ filter?: string, limit?: 2000 }` | `{ count, commands: [string] }` (English names, loaded commands incl. plug-ins) |
-| `commands.run` | `{ macro: string, echo?: false, select_ids?: [Id], capture_history?: true }` | `{ success: bool, history: string, …ChangeSet }` — runs `RhinoApp.RunScript`. `select_ids` replaces the selection first. `history` is the command-line text added during the run. Fails with `rhino_busy` if a command is active. |
+| `commands.run` | `{ macro: string, echo?: false, select_ids?: [Id], capture_history?: true, max_wait_ms?: 30000 }` | `{ success: bool, history: string, cancelled?: true, message?, …ChangeSet }` — runs `RhinoApp.RunScript`. `select_ids` replaces the selection first. `history` is the command-line text added during the run. A command still running after `max_wait_ms` (usually stuck at an unanswered prompt) is cancelled with Esc and reported as `cancelled`. Fails with `rhino_busy` if a command is active. |
+| `commands.cancel` | — | `{ was_running, cancel_sent }` — presses Esc (and sends `!`) to cancel the running command. Allowed while a command runs. |
 | `commands.history` | `{ lines?: 50 }` | `{ text }` |
 
 ### python (IronPython 2.7, Rhino's built-in engine)
@@ -213,7 +216,10 @@ trim_curve   { ids, cutter_ids, keep_point: P }     (keeps the piece nearest kee
 { type: "leader", text, points: [P…] (arrow tip first), plane?, dimstyle? }
 { type: "dimension", kind?: "aligned"|"horizontal"|"vertical", start, end, line_point, plane?, dimstyle? }
 { type: "dot", text, point, height?: 14 }
+{ type: "hatch", boundary_ids: [Id], pattern?: "Solid", scale?: 1, rotation_deg?: 0 }
 ```
+Standard hatch patterns (Solid, Hatch1–3, HatchDash, Grid, Grid60, Plus, Squares) are added to the
+document on first use if missing.
 
 ### views & output
 | method | params | result |

@@ -251,6 +251,8 @@ namespace OpenRhinoMcp.Handlers
                                                    J.ReqNum(sc, "page"), DocUtil.ParseUnits(J.Str(sc, "page_units", doc.PageUnitSystem.ToString())));
                     }
                     if (J.Bool(dt, "lock", true)) dv.DetailGeometry.IsProjectionLocked = true;
+                    var detailName = J.Str(dt, "name");
+                    if (!string.IsNullOrEmpty(detailName)) dv.Attributes.Name = detailName;
                     dv.CommitChanges();
                     detailIds.Add(dv.Id.ToString());
                 }

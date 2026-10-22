@@ -47,18 +47,18 @@ other local programs can't drive Rhino without the token.
 | `OpenRhinoMcpStart` / `OpenRhinoMcpStop` | Start or stop the bridge |
 | `OpenRhinoMcpSettings` | Auto-start with Rhino (default on) and preferred port |
 
-## Tools (38)
+## Tools (39)
 
 | Area | Tools |
 |---|---|
 | Orientation & knowledge | `rhino_status`, `rhino_document_info`, `rhino_guide`, `rhino_list_commands`, `rhino_command_help` (official Rhino 7 docs), `rhino_python_help` (live rhinoscriptsyntax docstrings), `rhino_api_lookup` (live RhinoCommon reflection) |
-| Escape hatches | `rhino_run_command` (any Rhino command or macro), `rhino_run_python` (IronPython 2.7), `rhino_command_history`, `rhino_undo`, `rhino_redo` |
+| Escape hatches | `rhino_run_command` (any Rhino command or macro), `rhino_run_python` (IronPython 2.7), `rhino_cancel`, `rhino_command_history`, `rhino_undo`, `rhino_redo` |
 | Files | `rhino_file` (new, open, save, save as, save copy, import, export selected) |
 | Layers | `rhino_list_layers`, `rhino_upsert_layer`, `rhino_delete_layer` |
 | Objects & tags | `rhino_query_objects` (by type, layer, name, user text, block, bbox, text), `rhino_get_objects`, `rhino_select_objects`, `rhino_delete_objects`, `rhino_set_attributes`, `rhino_transform_objects`, `rhino_get_user_text`, `rhino_set_user_text` |
 | Geometry | `rhino_create_geometry`, `rhino_geometry_op` (extrude, loft, revolve, sweeps, pipe, offset, join, explode, cap, fillet, rebuild, project, split, trim), `rhino_boolean` (solids and 2D regions), `rhino_analyze` |
 | Blocks | `rhino_list_blocks`, `rhino_create_block`, `rhino_insert_blocks` |
-| Drafting | `rhino_create_annotations` (text, leaders, dimensions, dots), `rhino_edit_annotations`, `rhino_list_views`, `rhino_set_view`, `rhino_capture_view`, `rhino_create_layout`, `rhino_export_pdf` |
+| Drafting | `rhino_create_annotations` (text, leaders, dimensions, dots, hatches), `rhino_edit_annotations`, `rhino_list_views`, `rhino_set_view`, `rhino_capture_view`, `rhino_create_layout`, `rhino_export_pdf` |
 
 ### Tag-driven drawings
 

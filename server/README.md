@@ -56,12 +56,12 @@ args = ["-y", "open-rhino-mcp"]
 
 ## Tools
 
-38 tools, all prefixed `rhino_`:
+39 tools, all prefixed `rhino_`:
 
 | Area | Tools |
 |---|---|
 | Session & docs | `rhino_status`, `rhino_document_info`, `rhino_guide`, `rhino_command_help`, `rhino_list_commands`, `rhino_python_help`, `rhino_api_lookup` |
-| Commands & scripts | `rhino_run_command`, `rhino_command_history`, `rhino_run_python`, `rhino_undo`, `rhino_redo`, `rhino_file` |
+| Commands & scripts | `rhino_run_command`, `rhino_cancel`, `rhino_command_history`, `rhino_run_python`, `rhino_undo`, `rhino_redo`, `rhino_file` |
 | Layers | `rhino_list_layers`, `rhino_upsert_layer`, `rhino_delete_layer` |
 | Objects & tags | `rhino_query_objects`, `rhino_get_objects`, `rhino_select_objects`, `rhino_delete_objects`, `rhino_set_attributes`, `rhino_transform_objects`, `rhino_get_user_text`, `rhino_set_user_text` |
 | Geometry | `rhino_create_geometry`, `rhino_geometry_op`, `rhino_boolean`, `rhino_analyze` |

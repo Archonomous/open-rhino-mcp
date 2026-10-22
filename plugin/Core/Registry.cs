@@ -19,6 +19,8 @@ namespace OpenRhinoMcp.Core
         UndoRecord = 2,
         /// <summary>Runs even with no active document.</summary>
         NoDoc = 4,
+        /// <summary>May run while a Rhino command is active (e.g. cancelling it).</summary>
+        AllowDuringCommand = 8,
         Edit = Mutating | UndoRecord,
     }
 
@@ -49,6 +51,11 @@ namespace OpenRhinoMcp.Core
 
             if ((e.Flags & MethodFlags.Mutating) == 0)
                 return e.Handler(doc, p);
+
+            // Requests are handled concurrently, so a read can run while a command is busy,
+            // but changing the document underneath a running command is never safe.
+            if ((e.Flags & MethodFlags.AllowDuringCommand) == 0 && Rhino.Commands.Command.InCommand())
+                throw new RpcException("rhino_busy", "A Rhino command is running. Wait for it, or call rhino_cancel, then retry.");
 
             using (var tracker = new ChangeTracker())
             {
@@ -96,7 +103,12 @@ namespace OpenRhinoMcp.Core
 
         public JObject Result(RhinoDoc doc)
         {
-            bool Exists(Guid id) => doc != null && doc.Objects.FindId(id) != null;
+            bool Exists(Guid id)
+            {
+                var o = doc?.Objects.FindId(id);
+                // Objects inside block definitions fire add events too; they aren't model objects.
+                return o != null && !o.IsInstanceDefinitionGeometry;
+            }
 
             var created = new List<string>();
             var deleted = new List<string>();

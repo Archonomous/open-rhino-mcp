@@ -122,8 +122,53 @@ namespace OpenRhinoMcp.Handlers
                     };
                     return doc.Objects.AddTextDot(dot, att);
                 }
+
+                case "hatch":
+                {
+                    var boundaries = DocUtil.FindAll(doc, J.Ids(it, "boundary_ids"))
+                        .Select(o => o.Geometry as Curve ?? throw J.Bad($"{o.Id} is not a curve."))
+                        .ToList();
+                    var pattern = HatchPatternIndex(doc, J.Str(it, "pattern", "Solid"));
+                    var hatches = Hatch.Create(boundaries, pattern, RhinoMath.ToRadians(J.Num(it, "rotation_deg", 0)),
+                                               J.Num(it, "scale", 1), doc.ModelAbsoluteTolerance);
+                    if (hatches == null || hatches.Length == 0)
+                        throw J.Failed("No hatch region found. Boundaries must be closed, planar curves.");
+                    var first = Guid.Empty;
+                    foreach (var h in hatches)
+                    {
+                        var id = doc.Objects.AddHatch(h, att);
+                        if (first == Guid.Empty) first = id;
+                    }
+                    return first;
+                }
             }
-            throw J.Bad($"Unknown annotation type '{type}'. Use text, leader, dimension or dot.");
+            throw J.Bad($"Unknown annotation type '{type}'. Use text, leader, dimension, dot or hatch.");
+        }
+
+        /// <summary>
+        /// Finds a hatch pattern by name. New documents often have an empty pattern table, so the
+        /// standard patterns (Solid, Hatch1, Hatch2, Hatch3, HatchDash, Grid, Grid60, Plus, Squares)
+        /// are added on first use.
+        /// </summary>
+        static int HatchPatternIndex(RhinoDoc doc, string name)
+        {
+            var existing = doc.HatchPatterns.FindName(name);
+            if (existing != null && !existing.IsDeleted) return existing.Index;
+
+            var defaults = typeof(HatchPattern).GetNestedType("Defaults");
+            var prop = defaults?.GetProperties(System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Static)
+                               .FirstOrDefault(pi => string.Equals(pi.Name, name, StringComparison.OrdinalIgnoreCase)
+                                                  || string.Equals(pi.Name, name.Replace(" ", ""), StringComparison.OrdinalIgnoreCase));
+            if (prop?.GetValue(null) is HatchPattern standard)
+            {
+                var idx = doc.HatchPatterns.Add(standard);
+                if (idx >= 0) return idx;
+                var again = doc.HatchPatterns.FindName(standard.Name);
+                if (again != null) return again.Index;
+            }
+            var available = string.Join(", ", doc.HatchPatterns.Where(h => !h.IsDeleted).Select(h => h.Name));
+            throw J.NotFound($"No hatch pattern '{name}'. In this file: {(available.Length > 0 ? available : "none")}. " +
+                             "Standard patterns: Solid, Hatch1, Hatch2, Hatch3, HatchDash, Grid, Grid60, Plus, Squares.");
         }
 
         static JToken Edit(RhinoDoc doc, JObject p)

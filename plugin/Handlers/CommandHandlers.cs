@@ -1,6 +1,7 @@
 using System;
 using System.Linq;
 using Newtonsoft.Json.Linq;
+using OpenRhinoMcp.Bridge;
 using OpenRhinoMcp.Core;
 using Rhino;
 using Rhino.Commands;
@@ -15,6 +16,12 @@ namespace OpenRhinoMcp.Handlers
         {
             Registry.Add("commands.list", List, MethodFlags.NoDoc);
             Registry.Add("commands.run", Run, MethodFlags.Mutating);
+            Registry.Add("commands.cancel", (doc, p) =>
+            {
+                var was = Command.InCommand();
+                if (was) CommandCanceller.RequestCancel();
+                return new JObject { ["was_running"] = was, ["cancel_sent"] = was };
+            }, MethodFlags.NoDoc | MethodFlags.AllowDuringCommand);
             Registry.Add("commands.history", (doc, p) =>
             {
                 var lines = Math.Max(1, Math.Min(2000, J.Int(p, "lines", 50)));
@@ -52,11 +59,26 @@ namespace OpenRhinoMcp.Handlers
                     if (!doc.Objects.Select(id, true)) throw J.NotFound($"Couldn't select {id} (missing, locked or hidden?).");
             }
 
+            // Watchdog: RunScript doesn't return while a command waits at a prompt or computes.
+            // After max_wait_ms, press Esc for the agent (repeating every 3 s until Rhino lets go).
+            var maxWait = Math.Max(1000, Math.Min(600000, J.Int(p, "max_wait_ms", 30000)));
+            var cancelled = false;
             var before = RhinoApp.CommandHistoryWindowText ?? "";
-            bool ok = RhinoApp.RunScript(macro, echo);
+            bool ok;
+            using (new System.Threading.Timer(_ => { cancelled = true; CommandCanceller.RequestCancel(); }, null, maxWait, 3000))
+            {
+                ok = RhinoApp.RunScript(macro, echo);
+            }
             var after = RhinoApp.CommandHistoryWindowText ?? "";
 
-            var result = new JObject { ["success"] = ok };
+            var result = new JObject { ["success"] = ok && !cancelled };
+            if (cancelled)
+            {
+                result["cancelled"] = true;
+                result["message"] = $"The command was still running after {maxWait / 1000} s, so it was cancelled (Esc). " +
+                                    "It was probably waiting at a prompt: read 'history', answer every prompt in the macro and end with _Enter, " +
+                                    "or raise max_wait_ms for genuinely long operations.";
+            }
             if (J.Bool(p, "capture_history", true))
                 result["history"] = J.Truncate(HistoryDelta(before, after), MaxHistory);
             return result;
