@@ -46,8 +46,8 @@ namespace OpenRhinoMcp.Commands
             }
             else
             {
-                RhinoApp.WriteLine("Open Rhino MCP {0}: listening on 127.0.0.1:{1}, {2} client(s) connected, {3} request(s) served.",
-                    plugin.Version, server.Port, server.ClientCount, server.RequestCount);
+                RhinoApp.WriteLine(string.Format("Open Rhino MCP {0}: listening on 127.0.0.1:{1}, {2} client(s) connected, {3} request(s) served.",
+                    plugin.Version, server.Port, server.ClientCount, server.RequestCount));
                 RhinoApp.WriteLine("Session file: {0}", Discovery.SessionFilePath);
             }
             RhinoApp.WriteLine("Auto-start with Rhino: {0}. Preferred port: {1}.", plugin.AutoStart ? "on" : "off", plugin.PreferredPort);
