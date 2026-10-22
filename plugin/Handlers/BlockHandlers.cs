@@ -64,8 +64,11 @@ namespace OpenRhinoMcp.Handlers
             var result = new JObject { ["definition"] = name };
             if (J.Bool(p, "replace_with_instance", true))
             {
-                var att = doc.CreateDefaultAttributes();
+                // The instance goes where its source objects were (model space or the same layout).
+                var att = DocUtil.ModelAttributes(doc);
                 att.LayerIndex = objs[0].Attributes.LayerIndex;
+                att.Space = objs[0].Attributes.Space;
+                att.ViewportId = objs[0].Attributes.ViewportId;
                 var iid = doc.Objects.AddInstanceObject(idx, Transform.Translation(basePt - Point3d.Origin), att);
                 result["instance_id"] = iid == Guid.Empty ? null : iid.ToString();
             }

@@ -156,8 +156,10 @@ units holding detail views that look into model space at a set scale.
   the layout to confirm. Keep one dimstyle per drawing scale if scaling is off.
 - Put sheet annotation (title block, notes, keynotes) on the layout with
   attributes.layout: "<layout name>"; coordinates are then page units.
-- Commands act in the active view. rhino_create_layout makes the new layout active;
-  activate a model view (rhino_set_view) before running model commands.
+- Typed tools (create_geometry, annotations, blocks) always draw in model space unless
+  attributes.layout names a sheet. Rhino commands and rs.Add* calls in rhino_run_python
+  instead follow the ACTIVE view: with a layout active they draw on that sheet. Activate
+  a model view (rhino_set_view) before modelling with commands or scripts.
 - Text height on layouts is in page units (0.09–0.125 in is typical for notes).
 - Print widths come from layers (or objects); check them with "_Print" preview or a PDF.
   Hidden lines and hatches print at their own widths.

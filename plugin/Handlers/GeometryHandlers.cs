@@ -196,7 +196,7 @@ namespace OpenRhinoMcp.Handlers
 
         static ObjectAttributes AttrsFor(RhinoDoc doc, JObject p, RhinoObject source)
         {
-            var att = source != null ? source.Attributes.Duplicate() : doc.CreateDefaultAttributes();
+            var att = source != null ? source.Attributes.Duplicate() : DocUtil.ModelAttributes(doc);
             if (source != null)
             {
                 // New geometry shouldn't inherit identity-like data from its source.

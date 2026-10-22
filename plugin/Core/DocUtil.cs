@@ -103,9 +103,22 @@ namespace OpenRhinoMcp.Core
             return ds;
         }
 
-        public static ObjectAttributes NewAttributes(RhinoDoc doc, JObject a)
+        /// <summary>
+        /// Default attributes in MODEL space. Rhino's CreateDefaultAttributes follows the active view,
+        /// so with a layout active new objects would silently land on that sheet. Page space is opt-in
+        /// via attributes.layout.
+        /// </summary>
+        public static ObjectAttributes ModelAttributes(RhinoDoc doc)
         {
             var att = doc.CreateDefaultAttributes();
+            att.Space = ActiveSpace.ModelSpace;
+            att.ViewportId = Guid.Empty;
+            return att;
+        }
+
+        public static ObjectAttributes NewAttributes(RhinoDoc doc, JObject a)
+        {
+            var att = ModelAttributes(doc);
             ApplyAttributes(doc, att, a);
             if (a != null)
             {
