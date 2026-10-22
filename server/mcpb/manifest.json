@@ -1,0 +1,47 @@
+{
+  "$schema": "https://raw.githubusercontent.com/anthropics/mcpb/main/dist/mcpb-manifest-v0.3.schema.json",
+  "manifest_version": "0.3",
+  "name": "open-rhino-mcp",
+  "display_name": "Open Rhino MCP",
+  "version": "0.1.0",
+  "description": "Drive Rhino 7 from Claude: query and tag objects, model, annotate, lay out sheets, export PDFs, run commands and IronPython.",
+  "long_description": "Open Rhino MCP connects Claude to a running Rhino 7 through the Open Rhino MCP plug-in (install the .rhp in Rhino first). It exposes typed tools for objects, user text, layers, geometry, blocks, annotations, layouts and PDF export, plus scripted Rhino commands, IronPython, live API help and official command docs.",
+  "author": { "name": "Studio Archonomous", "url": "https://github.com/Archonomous" },
+  "repository": { "type": "git", "url": "https://github.com/Archonomous/open-rhino-mcp" },
+  "homepage": "https://github.com/Archonomous/open-rhino-mcp",
+  "documentation": "https://github.com/Archonomous/open-rhino-mcp#readme",
+  "support": "https://github.com/Archonomous/open-rhino-mcp/issues",
+  "license": "AGPL-3.0-only",
+  "keywords": ["rhino", "rhino3d", "cad", "architecture", "drafting", "nurbs"],
+  "server": {
+    "type": "node",
+    "entry_point": "dist/index.js",
+    "mcp_config": {
+      "command": "node",
+      "args": ["${__dirname}/dist/index.js"],
+      "env": {
+        "OPEN_RHINO_MCP_PORT": "${user_config.port}",
+        "OPEN_RHINO_MCP_SESSION_FILE": "${user_config.session_file}"
+      }
+    }
+  },
+  "user_config": {
+    "port": {
+      "type": "number",
+      "title": "Port override",
+      "description": "Leave empty. Only set if the plug-in listens on a fixed port and the session file can't be read.",
+      "required": false
+    },
+    "session_file": {
+      "type": "file",
+      "title": "Session file override",
+      "description": "Leave empty. Path to the plug-in's session.json if it isn't in the default location.",
+      "required": false
+    }
+  },
+  "tools_generated": false,
+  "compatibility": {
+    "platforms": ["win32", "darwin"],
+    "runtimes": { "node": ">=18.0.0" }
+  }
+}

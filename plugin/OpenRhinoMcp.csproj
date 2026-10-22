@@ -1,0 +1,35 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <!-- Rhino 7 runs on .NET Framework 4.8 (Windows) and Mono (macOS). -->
+    <TargetFramework>net48</TargetFramework>
+    <LangVersion>latest</LangVersion>
+    <RootNamespace>OpenRhinoMcp</RootNamespace>
+    <AssemblyName>OpenRhinoMcp</AssemblyName>
+    <TargetExt>.rhp</TargetExt>
+    <Version>0.1.0</Version>
+    <AssemblyTitle>Open Rhino MCP</AssemblyTitle>
+    <Product>Open Rhino MCP</Product>
+    <Company>Studio Archonomous</Company>
+    <Description>Lets AI agents (Claude, Cursor, Codex and other MCP clients) drive Rhino 7.</Description>
+    <Copyright>Copyright © 2026 Studio Archonomous. AGPL-3.0.</Copyright>
+    <NoWarn>$(NoWarn);NU1701;CS0618</NoWarn>
+    <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
+    <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- Compile against an early Rhino 7 SR so the plug-in loads on any Rhino 7 install.
+         RhinoCommon itself is never copied; Rhino supplies it at runtime. -->
+    <PackageReference Include="RhinoCommon" Version="7.13.21348.13001" IncludeAssets="compile;build" PrivateAssets="all" />
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
+    <!-- Lets the project build on machines without the .NET Framework 4.8 targeting pack (CI, Linux). -->
+    <PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies" Version="1.0.3" PrivateAssets="all" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Reference Include="System.Drawing" />
+    <Reference Include="System.Net.Http" />
+  </ItemGroup>
+
+</Project>

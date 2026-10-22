@@ -1,0 +1,14 @@
+# .NET plug-in
+plugin/bin/
+plugin/obj/
+*.user
+.vs/
+
+# Node server (see server/.gitignore)
+node_modules/
+
+# OS / editors
+.DS_Store
+Thumbs.db
+.vscode/
+out/
