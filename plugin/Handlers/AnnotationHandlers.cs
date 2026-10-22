@@ -183,6 +183,7 @@ namespace OpenRhinoMcp.Handlers
 
             var changed = new JArray();
             var skipped = new JArray();
+            var unmatched = new JArray();
             foreach (var o in DocUtil.FindAll(doc, J.Ids(p, "ids")))
             {
                 string Next(string current) =>
@@ -192,11 +193,38 @@ namespace OpenRhinoMcp.Handlers
                 {
                     case TextEntity te:
                     {
-                        var style = styleName != null ? DocUtil.DimStyle(doc, styleName) : (doc.DimStyles.FindId(te.DimensionStyleId) ?? doc.DimStyles.Current);
-                        var nte = TextEntity.Create(Next(te.PlainText), te.Plane, style, false, 0, 0);
-                        if (nte == null) { skipped.Add(o.Id.ToString()); break; }
-                        nte.TextHeight = height ?? te.TextHeight;
-                        nte.Justification = te.Justification;
+                        if (find != null && (te.PlainText ?? "").IndexOf(find, StringComparison.Ordinal) < 0)
+                        {
+                            unmatched.Add(o.Id.ToString());
+                            break;
+                        }
+                        // Edit inside the rich text so fonts, bold/italic and line breaks survive.
+                        var nte = (TextEntity)te.Duplicate();
+                        var rich = te.RichText ?? "";
+                        var oldPlain = (te.PlainText ?? "").TrimEnd('\r', '\n');
+                        string newRich = null;
+                        if (find != null)
+                        {
+                            var key = EscapeRtf(find);
+                            if (key.Length > 0 && rich.Contains(key)) newRich = rich.Replace(key, EscapeRtf(replace));
+                        }
+                        else if (newText != null)
+                        {
+                            var key = EscapeRtf(oldPlain);
+                            if (key.Length > 0 && rich.Contains(key)) newRich = ReplaceFirst(rich, key, EscapeRtf(newText));
+                        }
+
+                        if (newRich != null)
+                            nte.RichText = newRich;
+                        else if (newText != null || find != null)
+                        {
+                            // Text spans several formatting runs: rebuild as one run in the first run's font.
+                            var font = te.Font;
+                            nte.RichText = PlainRtf(Next(te.PlainText ?? ""), font);
+                        }
+
+                        if (height.HasValue) nte.TextHeight = height.Value;
+                        if (styleName != null) nte.DimensionStyleId = DocUtil.DimStyle(doc, styleName).Id;
                         if (doc.Objects.Replace(o.Id, nte)) changed.Add(o.Id.ToString());
                         else skipped.Add(o.Id.ToString());
                         break;
@@ -214,12 +242,52 @@ namespace OpenRhinoMcp.Handlers
                 }
             }
             var result = new JObject { ["changed_ids"] = changed };
+            if (unmatched.Count > 0)
+            {
+                result["unmatched_ids"] = unmatched;
+                result["warning"] = $"'{find}' wasn't found in {unmatched.Count} object(s); they were left unchanged.";
+            }
             if (skipped.Count > 0)
             {
                 result["skipped_ids"] = skipped;
                 result["note"] = "Only text and dots are editable here. For leaders and dimensions use rhino_run_command with _EditText / _Properties, or rhino_run_python.";
             }
             return result;
+        }
+
+        /// <summary>Escapes plain text the way Rhino writes it inside RTF runs.</summary>
+        static string EscapeRtf(string s)
+        {
+            if (string.IsNullOrEmpty(s)) return "";
+            var sb = new System.Text.StringBuilder();
+            foreach (var ch in s.Replace("\r\n", "\n"))
+            {
+                switch (ch)
+                {
+                    case '\\': sb.Append("\\\\"); break;
+                    case '{': sb.Append("\\{"); break;
+                    case '}': sb.Append("\\}"); break;
+                    case '\n': sb.Append("\\par "); break;
+                    default:
+                        if (ch > 127) sb.Append("\\u").Append((int)ch).Append('?');
+                        else sb.Append(ch);
+                        break;
+                }
+            }
+            return sb.ToString();
+        }
+
+        static string ReplaceFirst(string s, string find, string replace)
+        {
+            var i = s.IndexOf(find, StringComparison.Ordinal);
+            return i < 0 ? s : s.Substring(0, i) + replace + s.Substring(i + find.Length);
+        }
+
+        static string PlainRtf(string text, Font font)
+        {
+            var face = font?.QuartetName ?? "Arial";
+            var style = (font != null && font.Bold ? "\\b" : "") + (font != null && font.Italic ? "\\i" : "");
+            return "{\\rtf1\\deff0{\\fonttbl{\\f0 " + face + ";}}{\\f0" + style + " " + EscapeRtf(text) + "}}";
         }
     }
 }

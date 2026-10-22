@@ -208,7 +208,7 @@ trim_curve   { ids, cutter_ids, keep_point: P }     (keeps the piece nearest kee
 | method | params | result |
 |---|---|---|
 | `annotations.create` | `{ items: [Ann] }` | `{ ids, errors }` |
-| `annotations.edit` | `{ ids, text?, find?, replace?, height?, dimstyle? }` | ChangeSet — editing rebuilds plain text (rich formatting on edited objects is lost). |
+| `annotations.edit` | `{ ids, text?, find?, replace?, height?, dimstyle? }` | ChangeSet — edits happen inside the rich text, so fonts and bold/italic survive; returns `unmatched_ids` for find misses. |
 
 `Ann` items (each may carry `attributes`):
 ```

@@ -12,3 +12,6 @@ node_modules/
 Thumbs.db
 .vscode/
 out/
+
+# Local test files (real project drawings)
+_tests/

@@ -170,6 +170,10 @@ namespace OpenRhinoMcp.Handlers
             var width = Math.Max(64, Math.Min(4096, J.Int(p, "width", 1600)));
             var height = Math.Max(64, Math.Min(4096, J.Int(p, "height", 1000)));
 
+            // Layouts render the paper only (like a PDF page), optionally cropped to a page region.
+            if (view is RhinoPageView page && J.Str(p, "display_mode") == null && J.Get(p, "zoom_ids") == null)
+                return CapturePage(doc, page, p, width);
+
             var ids = J.Ids(p, "zoom_ids", false);
             if (ids != null)
             {
@@ -213,6 +217,51 @@ namespace OpenRhinoMcp.Handlers
             {
                 bmp?.Dispose();
                 if (previous != null) { vp.DisplayMode = previous; view.Redraw(); }
+            }
+        }
+
+        static JToken CapturePage(RhinoDoc doc, RhinoPageView page, JObject p, int width)
+        {
+            double pageW = page.PageWidth, pageH = page.PageHeight;
+            double x0 = 0, y0 = 0, x1 = pageW, y1 = pageH;
+            if (J.Obj(p, "crop") is JObject crop)
+            {
+                var a = J.ReqPt(crop, "corner_a");
+                var b = J.ReqPt(crop, "corner_b");
+                x0 = Math.Max(0, Math.Min(a.X, b.X)); x1 = Math.Min(pageW, Math.Max(a.X, b.X));
+                y0 = Math.Max(0, Math.Min(a.Y, b.Y)); y1 = Math.Min(pageH, Math.Max(a.Y, b.Y));
+                if (x1 - x0 <= 0 || y1 - y0 <= 0) throw J.Bad("crop is outside the page or has zero size (page units, origin bottom-left).");
+            }
+
+            var toInches = RhinoMath.UnitScale(doc.PageUnitSystem, UnitSystem.Inches);
+            var pageWIn = pageW * toInches;
+            var cropWIn = (x1 - x0) * toInches;
+            // dpi that gives the requested pixel width for the cropped region, capped so the full page stays < 14k px.
+            var dpi = Math.Max(36, Math.Min(Math.Min(1200, 14000 / Math.Max(pageWIn, 0.1)), width / Math.Max(cropWIn, 0.01)));
+
+            var settings = new ViewCaptureSettings(page, dpi);
+            using (var full = ViewCapture.CaptureToBitmap(settings))
+            {
+                if (full == null) throw J.Failed("Layout capture failed.");
+                int px0 = (int)Math.Floor(x0 / pageW * full.Width);
+                int px1 = (int)Math.Ceiling(x1 / pageW * full.Width);
+                int py0 = (int)Math.Floor((pageH - y1) / pageH * full.Height);   // bitmap rows run top-down
+                int py1 = (int)Math.Ceiling((pageH - y0) / pageH * full.Height);
+                var rect = new System.Drawing.Rectangle(px0, py0, Math.Max(1, Math.Min(full.Width, px1) - px0), Math.Max(1, Math.Min(full.Height, py1) - py0));
+                using (var bmp = rect.Width == full.Width && rect.Height == full.Height ? (System.Drawing.Bitmap)full.Clone() : full.Clone(rect, full.PixelFormat))
+                using (var ms = new MemoryStream())
+                {
+                    bmp.Save(ms, System.Drawing.Imaging.ImageFormat.Png);
+                    return new JObject
+                    {
+                        ["view"] = page.PageName,
+                        ["width"] = bmp.Width,
+                        ["height"] = bmp.Height,
+                        ["dpi"] = J.N(dpi),
+                        ["region"] = new JObject { ["corner_a"] = new JArray(J.N(x0), J.N(y0)), ["corner_b"] = new JArray(J.N(x1), J.N(y1)) },
+                        ["png_base64"] = Convert.ToBase64String(ms.ToArray())
+                    };
+                }
             }
         }
 

@@ -8,6 +8,7 @@ import { fetchCommandHelp, CommandHelpError, type FetchLike } from "./docs.js";
 import { GUIDE_TOPICS, renderGuide } from "./guide.js";
 import {
   AnnotationItem,
+  Point2,
   Attributes,
   BBox,
   Color,
@@ -513,7 +514,7 @@ export const TOOL_SPECS: ToolSpec[] = [
     name: "rhino_edit_annotations",
     title: "Edit annotation text",
     method: "annotations.edit",
-    description: `Edit text/leader/dot/dimension text: set text outright, or find/replace within it; optionally change height or dimstyle. Editing rebuilds the text as plain text (rich formatting on edited objects is lost). ${CHANGESET_NOTE}`,
+    description: `Edit text/leader/dot/dimension text: set text outright, or find/replace within it; optionally change height or dimstyle. Edits happen inside the rich text, so fonts, bold/italic and line breaks are kept; find/replace reports objects where the text was not found. ${CHANGESET_NOTE}`,
     shape: {
       ids: Ids.min(1),
       text: z.string().optional(),
@@ -555,7 +556,7 @@ export const TOOL_SPECS: ToolSpec[] = [
     title: "Capture a view image",
     method: "views.capture",
     description:
-      "Capture a model view or layout as a PNG image you can look at. Use it to check your work. Options: view name (default active), width/height in pixels (default 1600x1000), display_mode, transparent background, zoom_ids to frame specific objects first, grid/axes.",
+      "Capture a model view or layout as a PNG image you can look at. Use it to check your work. Layouts render the paper only, exactly as printed; pass crop {corner_a, corner_b} in page units (origin bottom-left) to zoom into part of a sheet (a schedule, the keynotes) at full resolution, with width setting the pixel width of the crop. Model views: width/height in pixels (default 1600x1000), display_mode, transparent background, zoom_ids to frame specific objects first, grid/axes.",
     shape: {
       view: z.string().optional(),
       width: z.number().int().min(64).max(8000).optional(),
@@ -565,6 +566,10 @@ export const TOOL_SPECS: ToolSpec[] = [
       zoom_ids: Ids.optional(),
       grid: z.boolean().optional(),
       axes: z.boolean().optional(),
+      crop: z
+        .object({ corner_a: Point2, corner_b: Point2 })
+        .optional()
+        .describe("Layouts only: page-unit rectangle to capture (origin bottom-left of the sheet)"),
       timeout_ms: TimeoutMs,
     },
     annotations: READ,

@@ -1,6 +1,6 @@
 {
   "name": "open-rhino-mcp",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "MCP server that lets AI agents drive Rhino 7 through the Open Rhino MCP plug-in.",
   "license": "AGPL-3.0-only",
   "repository": {
