@@ -149,6 +149,7 @@ namespace OpenRhinoMcp.Handlers
                     {
                         var style = styleName != null ? DocUtil.DimStyle(doc, styleName) : (doc.DimStyles.FindId(te.DimensionStyleId) ?? doc.DimStyles.Current);
                         var nte = TextEntity.Create(Next(te.PlainText), te.Plane, style, false, 0, 0);
+                        if (nte == null) { skipped.Add(o.Id.ToString()); break; }
                         nte.TextHeight = height ?? te.TextHeight;
                         nte.Justification = te.Justification;
                         if (doc.Objects.Replace(o.Id, nte)) changed.Add(o.Id.ToString());

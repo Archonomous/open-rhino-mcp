@@ -145,7 +145,8 @@ namespace OpenRhinoMcp.Handlers
                         var nv = J.ReqStr(p, "named_view");
                         var idx = doc.NamedViews.FindByName(nv);
                         if (idx < 0) throw J.NotFound($"No named view '{nv}'.");
-                        doc.NamedViews.Restore(idx, vp, true);
+                        // Restore(int, RhinoViewport, bool) is obsolete since Rhino 6 (backgroundBitmap ignored).
+                        doc.NamedViews.Restore(idx, vp);
                         break;
                     case "display_mode":
                         vp.DisplayMode = Mode(J.ReqStr(p, "display_mode"));
@@ -241,6 +242,8 @@ namespace OpenRhinoMcp.Handlers
                         if (box.IsValid) dv.Viewport.ZoomBoundingBox(box);
                     }
                     else dv.Viewport.ZoomExtents();
+                    // Commit the camera first so it can't overwrite the scale set below.
+                    dv.CommitViewportChanges();
 
                     if (J.Obj(dt, "scale") is JObject sc)
                     {
@@ -248,7 +251,6 @@ namespace OpenRhinoMcp.Handlers
                                                    J.ReqNum(sc, "page"), DocUtil.ParseUnits(J.Str(sc, "page_units", doc.PageUnitSystem.ToString())));
                     }
                     if (J.Bool(dt, "lock", true)) dv.DetailGeometry.IsProjectionLocked = true;
-                    dv.CommitViewportChanges();
                     dv.CommitChanges();
                     detailIds.Add(dv.Id.ToString());
                 }
