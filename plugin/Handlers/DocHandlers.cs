@@ -34,8 +34,8 @@ namespace OpenRhinoMcp.Handlers
             j["hatch_patterns"] = new JArray(doc.HatchPatterns.Where(h => !h.IsDeleted).Select(h => h.Name));
             j["materials"] = doc.Materials.Count;
             var groupNames = doc.Groups.GroupNames(true) ?? new string[0];
-            var named = groupNames.Where(n => !System.Text.RegularExpressions.Regex.IsMatch(n ?? "", @"^Group\d+$")).Take(200);
-            j["groups"] = new JObject { ["count"] = groupNames.Length, ["named"] = new JArray(named) };
+            var namedGroups = groupNames.Where(n => !System.Text.RegularExpressions.Regex.IsMatch(n ?? "", @"^Group\d+$")).Take(200);
+            j["groups"] = new JObject { ["count"] = groupNames.Length, ["named"] = new JArray(namedGroups) };
             j["document_user_text"] = DocUserText(doc);
             j["notes"] = doc.Notes ?? "";
             return j;
