@@ -174,6 +174,12 @@ units holding detail views that look into model space at a set scale.
   text placed by eye. Map cells by row/column from their bounding boxes first, edit
   with rhino_edit_annotations keep_edge "right" for those columns, and when a table
   grows, extend the grid lines and move everything below it by whole row heights.
+- In rhino_run_python with a layout active, doc.Objects.Add*/AddCurve can land objects in
+  page space even when the attributes say model space. After adding, check
+  Attributes.Space and fix it with ModifyAttributes (Space = ModelSpace, ViewportId =
+  Guid.Empty), or activate a model view first. Typed tools already handle this.
+- Before laying out relative to sheet content (clouds, callouts), re-read the current
+  bounding boxes: people move things between sessions.
 - In rhino_run_python, never measure an unattached TextEntity (a Duplicate() not yet
   in the document): its bounding box can come from the dimstyle height, and the
   per-object height override can be lost. Reassign TextHeight before committing, then
