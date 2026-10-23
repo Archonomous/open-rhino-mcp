@@ -514,7 +514,7 @@ export const TOOL_SPECS: ToolSpec[] = [
     name: "rhino_edit_annotations",
     title: "Edit annotation text",
     method: "annotations.edit",
-    description: `Edit text/leader/dot/dimension text: set text outright, or find/replace within it; optionally change height or dimstyle. Edits happen inside the rich text, so fonts, bold/italic and line breaks are kept; find/replace reports objects where the text was not found. ${CHANGESET_NOTE}`,
+    description: `Edit text/leader/dot/dimension text: set text outright (use \\n for line breaks), or find/replace within it; optionally change height or dimstyle. Edits happen inside the rich text, so each line keeps its font, bold/italic and the object's height override. For table cells whose text is placed by hand (left-justified but visually right- or center-aligned), pass keep_edge so the new text stays aligned to the same edge. find/replace reports objects where the text was not found. ${CHANGESET_NOTE}`,
     shape: {
       ids: Ids.min(1),
       text: z.string().optional(),
@@ -522,6 +522,10 @@ export const TOOL_SPECS: ToolSpec[] = [
       replace: z.string().optional(),
       height: z.number().positive().optional(),
       dimstyle: z.string().optional(),
+      keep_edge: z
+        .enum(["left", "right", "center"])
+        .optional()
+        .describe("Keep this edge of the text where it was (e.g. right for right-aligned schedule columns)"),
     },
     annotations: EDIT,
   },

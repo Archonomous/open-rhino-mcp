@@ -169,6 +169,15 @@ units holding detail views that look into model space at a set scale.
   scale is in model units: start near 1/50 of the region size and check a capture.
 - Export with rhino_export_pdf: all layouts in page order by default; choose color
   "print" to honor print colors, or "black_white" for permit sets.
+- Hand-drawn schedules are common: each cell is its own text object over a grid of
+  rectangles and lines, with "right-aligned" columns that are really left-justified
+  text placed by eye. Map cells by row/column from their bounding boxes first, edit
+  with rhino_edit_annotations keep_edge "right" for those columns, and when a table
+  grows, extend the grid lines and move everything below it by whole row heights.
+- In rhino_run_python, never measure an unattached TextEntity (a Duplicate() not yet
+  in the document): its bounding box can come from the dimstyle height, and the
+  per-object height override can be lost. Reassign TextHeight before committing, then
+  measure the committed object.
 - After any layout change, capture the layout with rhino_capture_view and inspect it.
 `,
   },
